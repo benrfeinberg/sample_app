@@ -69,6 +69,21 @@ describe "Authentication" do
               expect(page).to have_title('Edit user')
             end
           end
+
+          describe "when signing in again" do
+            before do
+              visit signin_path
+              fill_in "Email",    with: user.email
+              fill_in "Password", with: user.password
+              click_button "Sign in"
+            end
+
+            describe "after signing in again" do
+              it "should render the default (profile) page" do
+                expect(page).to have_title(user.name)
+              end
+            end
+          end
         end
 
         describe "in the Users controller" do
@@ -116,6 +131,19 @@ describe "Authentication" do
         describe "submitting a DELETE request to the Users#destroy action" do
           before { delete user_path(user) }
           specify { expect(response).to redirect_to(root_url) }
+        end
+      end
+
+      describe "as an admin user" do
+        let(:admin) { FactoryGirl.create(:admin) }
+
+        before { sign_in admin, no_capybara: true }
+        describe "submitting a DELETE request to the Users#destroy action " do
+          it "should not delete their user" do
+            expect do
+              delete user_path(admin)
+            end.to change(User, :count).by(0)
+          end
         end
       end
     end
